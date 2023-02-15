@@ -11,7 +11,7 @@ import (
 )
 
 // Run -
-func (c *Conn) Run() error {
+func (c *Conn) Run(fn func(pglogrepl.Message)) error {
 	err := c.createSlot()
 	if err != nil {
 		return err
@@ -29,7 +29,6 @@ func (c *Conn) Run() error {
 	if err != nil {
 		return err
 	}
-	defer close(c.ch)
 
 	timeout := time.Second * 10
 	nextDeadline := time.Now().Add(timeout)
@@ -88,14 +87,8 @@ func (c *Conn) Run() error {
 					return err
 				}
 
-				switch m.(type) {
-				case *pglogrepl.RelationMessage, *pglogrepl.InsertMessage, *pglogrepl.UpdateMessage, *pglogrepl.DeleteMessage, *pglogrepl.TruncateMessage:
-					c.ch <- m
-
-				case *pglogrepl.BeginMessage, *pglogrepl.CommitMessage, *pglogrepl.TypeMessage, *pglogrepl.OriginMessage:
-					// pass
-				}
-
+				// send response
+				fn(m)
 				c.lsn = xld.WALStart + pglogrepl.LSN(len(xld.WALData))
 			}
 		}

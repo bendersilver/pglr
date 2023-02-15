@@ -5,10 +5,11 @@ import (
 	"os"
 
 	"github.com/bendersilver/pglr"
+	"github.com/jackc/pglogrepl"
 )
 
 func main() {
-	c, ch, err := pglr.NewConn(&pglr.Options{
+	c, err := pglr.NewConn(&pglr.Options{
 		PgURL:     os.Getenv("PG_URL"),
 		Temporary: true,
 	})
@@ -19,13 +20,16 @@ func main() {
 	c.DropPublication()
 	defer c.Close()
 
-	go func() {
-		for m := range ch {
-			log.Println(m)
-		}
-	}()
+	err = c.Run(func(msg pglogrepl.Message) {
+		// switch msg.(type) {
+		// case *pglogrepl.RelationMessage, *pglogrepl.InsertMessage, *pglogrepl.UpdateMessage, *pglogrepl.DeleteMessage, *pglogrepl.TruncateMessage:
+		// 	fn(m)
 
-	err = c.Run()
+		// case *pglogrepl.BeginMessage, *pglogrepl.CommitMessage, *pglogrepl.TypeMessage, *pglogrepl.OriginMessage:
+		// 	// pass
+		// }
+		log.Println(msg)
+	})
 	if err != nil {
 		log.Println(err)
 	}

@@ -21,21 +21,20 @@ type Options struct {
 // Conn -
 type Conn struct {
 	opt *Options
-	ch  chan pglogrepl.Message
 
 	conn *pgconn.PgConn
 	lsn  pglogrepl.LSN
 }
 
 // NewConn -
-func NewConn(opt *Options) (*Conn, chan pglogrepl.Message, error) {
+func NewConn(opt *Options) (*Conn, error) {
 	if opt.SlotName == "" {
 		opt.SlotName = "pgrpl_slot"
 	}
 
 	u, err := url.Parse(opt.PgURL)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	param := url.Values{}
 	param.Add("sslmode", "require")
@@ -47,12 +46,10 @@ func NewConn(opt *Options) (*Conn, chan pglogrepl.Message, error) {
 	c.opt = opt
 	c.conn, err = pgconn.Connect(ctx, u.String())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	c.ch = make(chan pglogrepl.Message)
-
-	return &c, c.ch, nil
+	return &c, nil
 }
 
 // Close -

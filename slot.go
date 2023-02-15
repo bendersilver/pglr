@@ -34,7 +34,7 @@ func (c *Conn) createSlot() error {
 		pglogrepl.CreateReplicationSlotOptions{
 			Mode:           pglogrepl.LogicalReplication,
 			SnapshotAction: "NOEXPORT_SNAPSHOT",
-			Temporary:      true,
+			Temporary:      c.opt.Temporary,
 		},
 	)
 	return err
